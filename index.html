@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Preparation App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f2f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .subject-btn {
+            padding: 12px 24px;
+            margin: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .question-form {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .hidden {
+            display: none;
+        }
+        .question-card {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button onclick="toggleAdminPanel()" style="margin-bottom: 20px;">Admin Panel</button>
+
+        <!-- Admin Panel -->
+        <div id="adminPanel" class="hidden">
+            <div class="question-form">
+                <h2>Add New Question</h2>
+                <select id="subjectSelect">
+                    <option value="maths">Mathematics</option>
+                    <option value="physics">Physics</option>
+                    <option value="chemistry">Chemistry</option>
+                    <option value="biology">Biology</option>
+                </select>
+                <input type="text" id="question" placeholder="Enter question">
+                <input type="text" id="option1" placeholder="Option 1">
+                <input type="text" id="option2" placeholder="Option 2">
+                <input type="text" id="option3" placeholder="Option 3">
+                <input type="text" id="option4" placeholder="Option 4">
+                <select id="correctAnswer">
+                    <option value="0">Option 1</option>
+                    <option value="1">Option 2</option>
+                    <option value="2">Option 3</option>
+                    <option value="3">Option 4</option>
+                </select>
+                <button onclick="saveQuestion()">Save Question</button>
+            </div>
+        </div>
+
+        <!-- Quiz Interface -->
+        <div id="quizInterface">
+            <h1>Select Subject</h1>
+            <button class="subject-btn" onclick="startQuiz('maths')">Mathematics</button>
+            <button class="subject-btn" onclick="startQuiz('physics')">Physics</button>
+            <button class="subject-btn" onclick="startQuiz('chemistry')">Chemistry</button>
+            <button class="subject-btn" onclick="startQuiz('biology')">Biology</button>
+            
+            <div id="quizContainer" class="hidden">
+                <div id="questionContainer"></div>
+                <button onclick="nextQuestion()" style="margin-top: 20px;">Next Question</button>
+                <div id="score" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Admin Panel Functions
+        function toggleAdminPanel() {
+            const panel = document.getElementById('adminPanel');
+            panel.classList.toggle('hidden');
+        }
+
+        function saveQuestion() {
+            const subject = document.getElementById('subjectSelect').value;
+            const question = {
+                question: document.getElementById('question').value,
+                options: [
+                    document.getElementById('option1').value,
+                    document.getElementById('option2').value,
+                    document.getElementById('option3').value,
+                    document.getElementById('option4').value
+                ],
+                correct: parseInt(document.getElementById('correctAnswer').value)
+            };
+
+            // Save to localStorage
+            const storedData = JSON.parse(localStorage.getItem(subject) || [];
+            storedData.push(question);
+            localStorage.setItem(subject, JSON.stringify(storedData));
+
+            alert('Question saved successfully!');
+        }
+
+        // Quiz Functions
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        function startQuiz(subject) {
+            const questions = JSON.parse(localStorage.getItem(subject)) || [];
+            if(questions.length === 0) {
+                alert('No questions available for this subject!');
+                return;
+            }
+            
+            currentQuestions = questions;
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById('quizContainer').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const question = currentQuestions[currentQuestionIndex];
+            const optionsHtml = question.options.map((opt, index) => `
+                <div class="question-card" onclick="checkAnswer(${index})">
+                    ${opt}
+                </div>
+            `).join('');
+
+            document.getElementById('questionContainer').innerHTML = `
+                <h3>${question.question}</h3>
+                <div>${optionsHtml}</div>
+            `;
+        }
+
+        function checkAnswer(selectedIndex) {
+            const correctIndex = currentQuestions[currentQuestionIndex].correct;
+            const options = document.getElementsByClassName('question-card');
+            
+            if(selectedIndex === correctIndex) {
+                options[selectedIndex].style.backgroundColor = '#90EE90';
+                score++;
+            } else {
+                options[selectedIndex].style.backgroundColor = '#FFB6C1';
+                options[correctIndex].style.backgroundColor = '#90EE90';
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if(currentQuestionIndex < currentQuestions.length) {
+                showQuestion();
+            } else {
+                document.getElementById('score').innerHTML = `Your Score: ${score}/${currentQuestions.length}`;
+                document.getElementById('quizContainer').classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
